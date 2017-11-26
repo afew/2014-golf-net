@@ -1,0 +1,126 @@
+﻿// Tcp Application
+//
+//+++++++1+++++++++2+++++++++3+++++++++4+++++++++5+++++++++6+++++++++7+++++++++8
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+
+using golf_net;
+using PGN;
+
+
+public class TplayInfo
+{
+	public float x, y, z;
+	public float d;
+	public float ct_x, ct_y;
+	public uint  club;
+	public float pow, best;
+	public byte  stroke;		// stroke counting
+	public uint  bonus;			// bonus
+	public byte  iswin;			// is win?
+
+	public TplayInfo()
+	{
+		x = 0.0F; y = 0.0F; z = 0.0F; d = 0.0F;
+		ct_x = 0.0F; ct_y = 0.0F; club = 0; pow  = 0.0F; best = 0.0F;
+		stroke =0; bonus =0; iswin = NTC.RST_NO;
+	}
+}
+
+public class TuserInfo
+{
+	public uint   id     = 0;
+	public string name   = null;
+	public byte   owner  = 0;
+	public byte   ready  = 0;
+	public byte   isplay = 0;						// is playing
+
+	public TplayInfo play = new TplayInfo();
+
+	public TuserInfo() : this(0, null, 0, 0){}
+	public TuserInfo(uint _id, string _name, byte _owner, byte _ready)
+	{
+		id   = _id   ; name = _name; owner= _owner; ready= _ready; isplay = NTC.RST_NO;
+	}
+}
+
+public class TplayMap
+{
+	public uint   id  = 0;
+	public string name= null;
+
+	public TplayMap() : this(0, null){}
+	public TplayMap(uint _id, string _name)
+	{
+		id   = _id  ; name = _name;
+	}
+}
+
+
+// Initial network data
+public partial class TcpApp
+{
+	//public static string	net_ip		= "192.168.0.7";
+	public static string	net_ip		= "192.168.0.74";
+	//public static string	net_ip		= "192.168.0.20";
+	public static string	net_pt		= "20001";
+	public static string	net_uid		= "AAAAA";
+	public static string	net_pwd		= "AAAAA";
+}
+
+
+
+public partial class TcpApp
+{
+	// IO
+	public static TcpCln	m_tcpCln    = new TcpCln();
+	public static Packet	m_wrkPck	= new Packet();							// work packet
+	public static byte[]	m_wrkBuf	= new byte[NTC.PCK_MAX];				// work buffer = Header + Payload
+	public static TcpCln	GetMainNet () { return m_tcpCln;    }				// tcp client application
+
+	// Game Application
+	public static string			app_char_name = null;						// character name
+	public static uint				app_user_id   = 0;							// user id
+	public static uint				app_advr_id   = 0;							// adversary id
+
+	public static List<TuserInfo>	app_user_lst  = new List<TuserInfo>();		// user list
+	public static List<TplayMap>	app_pmap_lst  = new List<TplayMap>();		// Play map list
+
+
+	public static void Clear()
+	{
+		app_char_name = null;
+		app_user_id   = 0;
+		app_advr_id   = 0;
+		app_user_lst.Clear();
+	}
+
+	public static TuserInfo FindUser(uint id)
+	{
+		for(int i = 0;i < app_user_lst.Count;++i)
+		{
+			if(id == app_user_lst[i].id)
+				return app_user_lst[i];
+		}
+
+		return null;
+	}
+
+	public static TuserInfo UserThis()
+	{
+		return FindUser(app_user_id);
+	}
+
+	public static TuserInfo UserOther()
+	{
+		return FindUser(app_advr_id);
+	}
+}
+

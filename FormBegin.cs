@@ -7,30 +7,47 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace ydnet
+using PGN;
+
+namespace golf_net
 {
 	public partial class FormBegin:Form
 	{
 		public FormBegin()
 		{
 			InitializeComponent();
-			this.txtUID.Text = "User Id";
-			this.txtPWD.Text = "User Password";
+			txtIp.Text = TcpApp.net_ip;
+			txtPt.Text = TcpApp.net_pt;
 
-			this.textIP.Text = "127.0.0.1";
-			this.textPt.Text = "50000";
+			txtUID.Text = TcpApp.net_uid;
+			txtPWD.Text = TcpApp.net_pwd;
+			txtUID.Focus();
+		}
+		
+		protected override void OnShown(EventArgs e)
+		{
+			txtUID.Focus();
+			base.OnShown(e);
+		}
+
+		private void btnConnect_Click(object sender,EventArgs e)
+		{
+			TcpApp.SendConnect(this.txtIp.Text, this.txtPt.Text);
+		}
+
+		private void btnDiscon_Click(object sender,EventArgs e)
+		{
+			TcpApp.SendDisConnect();
 		}
 
 		private void btnLogin_Click(object sender,EventArgs e)
 		{
-			FormAlpha	formAlpha = Program.GetMainForm();
-
-			formAlpha.ChageForm(PGC.PHASE_LOBBY);
+			TcpApp.SendLogin(this.txtUID.Text, this.txtPWD.Text );
 		}
 
-		private void FormBegin_Load(object sender,EventArgs e)
+		private void btnLogout_Click(object sender,EventArgs e)
 		{
-			this.txtUID.Select();
+			TcpApp.SendLogout();
 		}
 	}
 

@@ -10,16 +10,19 @@ using System.Windows.Forms;
 using System.Collections;
 //using System.Collections.Generic;
 
-namespace ydnet
+
+using PGN;
+
+namespace golf_net
 {
 	public partial class FormAlpha:Form
 	{
-		protected int			m_phase   = PGC.PHASE_BEGIN;
-		protected List<Form>	m_form    = new List<Form>();
-		FormBegin				formBegin = new FormBegin();
-		FormLobby				formLobby = new FormLobby();
-		FormPlay				formPlay  = new FormPlay();
-		FormResult				formResult= new FormResult();
+		public int			m_phase   = APC.PHASE_BEGIN;
+		public List<Form>	m_form    = new List<Form>();
+		public FormBegin	formBegin = new FormBegin();
+		public FormLobby	formLobby = new FormLobby();
+		public FormPlay		formPlay  = new FormPlay();
+		public FormResult	formResult= new FormResult();
 
 		public FormAlpha()
 		{
@@ -46,25 +49,17 @@ namespace ydnet
 			m_form[m_phase].Show();
 		}
 
-		public int ChageForm(int phase)
-		{
-			if(0 > phase || phase >= PGC.PHASE_MAX)
-				return PGC.EFAIL;
-
-			if(m_phase == phase)
-				return PGC.OK_AL;
-
-
-			m_form[m_phase].Hide();
-			m_phase = phase;
-			m_form[m_phase].Show();
-
-			return PGC.OK;
-		}
-
 		private void FormAlpha_Load(object sender,EventArgs e)
 		{
-			this.Location = new System.Drawing.Point(10, 10);
+			this.Location = new System.Drawing.Point(100, 100);
+		}
+
+
+		public int ShowMsgBox(FormMsgBox v)
+		{
+			v.Show();
+
+			return APC.OK;
 		}
 	}
 }
