@@ -38,7 +38,7 @@ class PGN_Tcln
 	protected	byte[]					m_autKey= null;
 	protected	int						m_autId	= -1;
 
-	
+
 
 	public PGN_Tcln()
 	{
@@ -189,7 +189,7 @@ class PGN_Tcln
 				{
 					Console.WriteLine("IoComplete::Cann't Send to Server");
 					CloseSocket();
-					return; 
+					return;
 				}
 
 				lock (m_lock)
