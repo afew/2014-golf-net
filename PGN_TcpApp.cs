@@ -15,39 +15,17 @@ using golf_net;
 using PGN;
 
 
-public class TplayInfo
-{
-	public float x, y, z;
-	public float d;
-	public float ct_x, ct_y;
-	public uint  club;
-	public float pow, best;
-	public byte  stroke;		// stroke counting
-	public uint  bonus;			// bonus
-	public byte  iswin;			// is win?
-
-	public TplayInfo()
-	{
-		x = 0.0F; y = 0.0F; z = 0.0F; d = 0.0F;
-		ct_x = 0.0F; ct_y = 0.0F; club = 0; pow  = 0.0F; best = 0.0F;
-		stroke =0; bonus =0; iswin = NTC.RST_NO;
-	}
-}
-
 public class TuserInfo
 {
-	public uint   id     = 0;
-	public string name   = null;
-	public byte   owner  = 0;
-	public byte   ready  = 0;
-	public byte   isplay = 0;						// is playing
-
-	public TplayInfo play = new TplayInfo();
+	public uint   id   = 0;
+	public string name = null;
+	public byte   owner= 0;
+	public byte   ready= 0;
 
 	public TuserInfo() : this(0, null, 0, 0){}
 	public TuserInfo(uint _id, string _name, byte _owner, byte _ready)
 	{
-		id   = _id   ; name = _name; owner= _owner; ready= _ready; isplay = NTC.RST_NO;
+		id   = _id   ; name = _name; owner= _owner; ready= _ready;
 	}
 }
 
@@ -68,11 +46,11 @@ public class TplayMap
 public partial class TcpApp
 {
 	//public static string	net_ip		= "192.168.0.7";
-	public static string	net_ip		= "192.168.0.74";
-	//public static string	net_ip		= "192.168.0.20";
+	//public static string	net_ip		= "192.168.0.74";
+	public static string	net_ip		= "192.168.0.20";
 	public static string	net_pt		= "20001";
 	public static string	net_uid		= "AAAAA";
-	public static string	net_pwd		= "AAAAA";
+	public static string	net_pwd		= "BBBBB";
 }
 
 
@@ -111,16 +89,6 @@ public partial class TcpApp
 		}
 
 		return null;
-	}
-
-	public static TuserInfo UserThis()
-	{
-		return FindUser(app_user_id);
-	}
-
-	public static TuserInfo UserOther()
-	{
-		return FindUser(app_advr_id);
 	}
 }
 

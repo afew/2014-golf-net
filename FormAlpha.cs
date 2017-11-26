@@ -10,9 +10,6 @@ using System.Windows.Forms;
 using System.Collections;
 //using System.Collections.Generic;
 
-
-using PGN;
-
 namespace golf_net
 {
 	public partial class FormAlpha:Form
@@ -52,14 +49,6 @@ namespace golf_net
 		private void FormAlpha_Load(object sender,EventArgs e)
 		{
 			this.Location = new System.Drawing.Point(100, 100);
-		}
-
-
-		public int ShowMsgBox(FormMsgBox v)
-		{
-			v.Show();
-
-			return APC.OK;
 		}
 	}
 }

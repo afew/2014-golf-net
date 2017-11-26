@@ -16,28 +16,17 @@ namespace golf_net
 		public FormBegin()
 		{
 			InitializeComponent();
-			txtIp.Text = TcpApp.net_ip;
-			txtPt.Text = TcpApp.net_pt;
+			this.txtIp.Text = TcpApp.net_ip;
+			this.txtPt.Text = TcpApp.net_pt;
 
-			txtUID.Text = TcpApp.net_uid;
-			txtPWD.Text = TcpApp.net_pwd;
-			txtUID.Focus();
+			this.txtUID.Text = TcpApp.net_uid;
+			this.txtPWD.Text = TcpApp.net_pwd;
 		}
 		
-		protected override void OnShown(EventArgs e)
-		{
-			txtUID.Focus();
-			base.OnShown(e);
-		}
-
+		
 		private void btnConnect_Click(object sender,EventArgs e)
 		{
 			TcpApp.SendConnect(this.txtIp.Text, this.txtPt.Text);
-		}
-
-		private void btnDiscon_Click(object sender,EventArgs e)
-		{
-			TcpApp.SendDisConnect();
 		}
 
 		private void btnLogin_Click(object sender,EventArgs e)
@@ -45,9 +34,14 @@ namespace golf_net
 			TcpApp.SendLogin(this.txtUID.Text, this.txtPWD.Text );
 		}
 
-		private void btnLogout_Click(object sender,EventArgs e)
+		private void lblPt_Click(object sender,EventArgs e)
 		{
-			TcpApp.SendLogout();
+
+		}
+
+		private void txtPt_TextChanged(object sender,EventArgs e)
+		{
+
 		}
 	}
 

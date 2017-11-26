@@ -21,7 +21,7 @@ namespace PGN
 		protected	int				m_rcvN	= 0;								// current received count
 
 		protected	List<byte[]>	m_sndB	= new List<byte[]>();				// send queue buffer
-		protected	int				m_sndC	= NTC.OK;							// sending complete?
+		protected	int				m_sndC	= 0;								// sending complete?
 		protected	int				m_sndN	= -1;								// current send index
 
 		protected	uint			m_nSqc	= 0;								// packet sequence
@@ -31,7 +31,7 @@ namespace PGN
 		{
 			CloseSocket();
 
-			m_sndC	= NTC.OK;
+			m_sndC	= 0;
 			m_sndN	= -1;
 
 			for(int n=0; n<m_sndB.Count; ++n)
@@ -95,11 +95,15 @@ namespace PGN
 
 
 		////////////////////////////////////////////////////////////////////////
+		// Inner Process...
+
+
+		////////////////////////////////////////////////////////////////////////
 		// Interface ...
 
 		public int SendTo(string str, ushort op)
 		{
-			if(NTC.OK != m_sndC)
+			if( 0 < m_sndC)
 				return NTC.EFAIL;
 
 			lock (m_oLock)
@@ -120,7 +124,7 @@ namespace PGN
 				byte[] buf = m_sndB[m_sndN];
 				nSnd = PGN.Packet.EnCrypt(ref buf, ref nSnd, s, l);
 
-				m_sndC = op;
+				m_sndC = 1;
 				m_scH.SendTo(m_sndB[m_sndN], m_sdR);
 			}
 
@@ -144,7 +148,7 @@ namespace PGN
 				byte[] buf = m_sndB[m_sndN];
 				nSnd = PGN.Packet.EnCrypt(ref buf, ref nSnd, s, l);
 
-				m_sndC	= pck.Opp;
+				m_sndC = 1;
 				m_scH.SendTo(m_sndB[m_sndN], m_sdR);
 			}
 

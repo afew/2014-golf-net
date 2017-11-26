@@ -7,8 +7,7 @@ namespace golf_net
 {
 	public static class Program
 	{
-		delegate int Tinvoke(int v);
-		delegate int TinvokeMsg(FormMsgBox v);
+		delegate int Tinvoke(int idx);
 
 
 		public static FormAlpha		m_formAlpha = null;
@@ -28,11 +27,6 @@ namespace golf_net
 		}
 
 		public static FormAlpha  GetMainForm() { return m_formAlpha; }
-		
-		static public int CurrentPhage()
-		{
-			return m_formAlpha.m_phase;
-		}
 		
 		static public int ChageForm(int phase)
 		{
@@ -58,58 +52,15 @@ namespace golf_net
 		}
 
 
-		static public int ChangeLobbyUserList(int n)
+		static public int ChageUserList(int n)
 		{
 			if(m_formAlpha.InvokeRequired)
 			{
-				m_formAlpha.Invoke(new Tinvoke(ChangeLobbyUserList), n);
+				m_formAlpha.Invoke(new Tinvoke(ChageUserList), n);
 			}
 			else
 			{
-				m_formAlpha.formLobby.ChangeLobbyUserList(n);
-			}
-
-			return APC.OK;
-		}
-
-
-		static public int ChangePlayPlayerInfo(int n)
-		{
-			if(m_formAlpha.InvokeRequired)
-			{
-				m_formAlpha.Invoke(new Tinvoke(ChangePlayPlayerInfo), n);
-			}
-			else
-			{
-				m_formAlpha.formPlay.ChangePlayPlayerInfo(n);
-			}
-
-			return APC.OK;
-		}
-		static public int ChangeResultPlayerInfo(int n)
-		{
-			if(m_formAlpha.InvokeRequired)
-			{
-				m_formAlpha.Invoke(new Tinvoke(ChangeResultPlayerInfo), n);
-			}
-			else
-			{
-				m_formAlpha.formResult.ChangeResultPlayerInfo(n);
-			}
-
-			return APC.OK;
-		}
-
-
-		static public int ShowMsgBox(FormMsgBox v)
-		{
-			if(m_formAlpha.InvokeRequired)
-			{
-				m_formAlpha.Invoke(new TinvokeMsg(ShowMsgBox), v);
-			}
-			else
-			{
-				m_formAlpha.ShowMsgBox(v);
+				m_formAlpha.formLobby.ChageUserList(n);
 			}
 
 			return APC.OK;

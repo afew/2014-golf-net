@@ -32,12 +32,12 @@ namespace golf_net
 
 		protected override void OnVisibleChanged(EventArgs e)
 		{
-			ChangeLobbyUserList(0);
+			ChageUserList(0);
 
 			base.OnVisibleChanged(e);
 		}
 
-		public void ChangeLobbyUserList(int n)
+		public void ChageUserList(int n)
 		{
 			int i=0;
 			List<TuserInfo> usr_lst = TcpApp.app_user_lst;
@@ -64,12 +64,6 @@ namespace golf_net
 
 			if(0< this.listUsr.Items.Count) this.listUsr.SelectedIndex = 0;
 			if(0< this.listMap.Items.Count) this.listMap.SelectedIndex = 0;
-		}
-
-		private void btnDiscon_Click(object sender,EventArgs e)
-		{
-			TcpApp.SendDisConnect();
-			Program.ChageForm(APC.PHASE_BEGIN);				
 		}
 	}
 }

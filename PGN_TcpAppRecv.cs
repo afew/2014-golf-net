@@ -18,69 +18,31 @@ using PGN;
 
 public partial class TcpApp
 {
-	public static int invited_rep(int btnRet, object v)
-	{
-		DialogResult ret= (DialogResult)btnRet;
-		uint[]	arr     = (uint[])v;
-		uint	sendId	= arr[0];
-		uint	destId	= arr[1];
-		uint	idx_map = arr[2];
-
-		int inviteRps = NTC.RST_OK;
-
-
-		if(DialogResult.No == ret)
-			inviteRps = NTC.RST_NO;
-
-
-		TcpApp.SendRsInvite(sendId, (byte)inviteRps);
-
-
-		if(NTC.RST_OK == inviteRps)
-		{
-			TcpApp.app_advr_id = sendId;
-
-			TcpApp.FindUser(app_user_id).ready = NTC.RST_READY_TRUE;
-			TcpApp.SendReady(NTC.RST_READY_TRUE);
-		}
-
-		return 0;
-	}
-
-	public static int invited_rqs(int btnRet, object v)
-	{
-		TcpApp.SendReady(NTC.RST_READY_TRUE);
-		return 0;
-	}
-
-
 	public static void OnIoEvent(int ev, int hr, object socket, int rcn, object data)
 	{
 		if     (NTC.EV_CLOSE == ev)
 		{
-			PGLog.LOGI("OnIoEvent: gracefully closed");
-			Program.ChageForm(APC.PHASE_BEGIN);
+			PGLog.LOGI("OnRecv: gracefully closed");
 		}
 		else if(NTC.EV_ACCEPT == ev)
 		{
-			PGLog.LOGI("OnIoEvent: Accept");
+			PGLog.LOGI("OnRecv: Accept");
 		}
 		else if(NTC.EV_CONNECT == ev)
 		{
-			PGLog.LOGI("OnIoEvent: Connect");
+			PGLog.LOGI("OnRecv: Connect");
 
 			if(NTC.OK != hr)
 			{
-				PGLog.LOGW("OnIoEvent: Connection Failed");
 			}
 		}
 		else if(NTC.EV_SEND == ev)
 		{
-			PGLog.LOGI("OnIoEvent: Send::type::" + rcn);
+			PGLog.LOGI("OnRecv: Send");
 		}
 		else if(NTC.EV_RECV == ev)
 		{
-			PGLog.LOGI("OnIoEvent: Receive");
+			PGLog.LOGI("OnRecv: Receive");
 
 			byte[] rcv = null;
 			ushort len = 0;
@@ -90,9 +52,10 @@ public partial class TcpApp
 
 			if(0>hr)
 			{
-			    PGLog.LOGI("OnIoEvent: disconnected");
+			    PGLog.LOGI("OnRecv: disconnected");
 			    TcpCln	pCln = (TcpCln)data;
-			    Program.ChageForm(APC.PHASE_BEGIN);
+
+			    pCln.CloseSocket();
 			    return;
 			}
 			
@@ -112,7 +75,7 @@ public partial class TcpApp
 				Packet.ValueFromBuf(ref app_char_name, rcv, idx_bgn + 4, 40);
 
 
-				PGLog.LOGI("OnIoEvent:user id/name::" + app_user_id + ", " + app_char_name);
+				PGLog.LOGI("OnRecv:user id/name::" + app_user_id + ", " + app_char_name);
 
 
 				Packet.ValueFromBuf(ref user_count   , rcv, idx_bgn + 48);
@@ -133,7 +96,7 @@ public partial class TcpApp
 
 					TuserInfo usr = new TuserInfo(id, name, owner, ready);
 					app_user_lst.Add(usr);
-					PGLog.LOGI("OnIoEvent:NTC.SC_ANS_LOGIN:: id/name::" + id + ", " + name);
+					PGLog.LOGI("OnRecv:NTC.SC_ANS_LOGIN:: id/name::" + id + ", " + name);
 				}
 
 
@@ -178,11 +141,11 @@ public partial class TcpApp
 
 					TuserInfo usr = new TuserInfo(id, name, owner, ready);
 					app_user_lst.Add(usr);
-					PGLog.LOGI("OnIoEvent:NTC.SC_ANS_LOGIN:: id/name::" + id + ", " + name);
+					PGLog.LOGI("OnRecv:NTC.SC_ANS_LOGIN:: id/name::" + id + ", " + name);
 				}
 
 
-				Program.ChangeLobbyUserList(0);
+				Program.ChageUserList(0);
 			}
 
 			else if(NTC.SC_BROADCAST_LOGOUT == opp)
@@ -204,8 +167,8 @@ public partial class TcpApp
 					}
 				}
 
-				Program.ChangeLobbyUserList(0);
-				PGLog.LOGI("OnIoEvent:NTC.SC_BROADCAST_LOGOUT::" + name);
+				Program.ChageUserList(0);
+				PGLog.LOGI("OnRecv:NTC.SC_BROADCAST_LOGOUT::" + name);
 			}
 			
 			else if(NTC.CS_REQ_BROADCAST == opp)
@@ -234,18 +197,26 @@ public partial class TcpApp
 
 					if(TcpApp.app_user_id == destId)
 					{
-						uint[]	arr = new uint[4];
-						arr[0] = sendId	;
-						arr[1] = destId	;
-						arr[2] = idx_map ;
-
-						//MessageBox.Show("From " + name + " 한판 뜰래? ", "Inviting", MessageBoxButtons.YesNo);
 						string name = TcpApp.FindUser(sendId).name;
-						string log  = "OnIoEvent:NTC.GP_INVITE:: sender:" + name + ", dest id::" + destId + ", map id::" + idx_map ;
-						PGLog.LOGI(log);
 
-						FormMsgBox frmMsg = new FormMsgBox("From " + name + " 한판 뜰래? ", "Inviting", (int)MessageBoxButtons.YesNo, arr, invited_rep);
-						Program.ShowMsgBox(frmMsg);
+						int inviteRps = NTC.RST_OK;
+						string log = "OnRecv:NTC.GP_INVITE:: sender:" + name + ", dest id::" + destId + ", map id::" + idx_map ;
+						PGLog.LOGI(log);
+						DialogResult r =
+						MessageBox.Show("From " + name + " 한판 뜰래? ", "Inviting", MessageBoxButtons.YesNo);
+
+						if(DialogResult.No == r)
+							inviteRps = NTC.RST_NO;
+
+						TcpApp.SendRsInvite(sendId, (byte)inviteRps);
+
+						if(NTC.RST_OK == inviteRps)
+						{
+							app_advr_id = sendId;
+
+							TcpApp.FindUser(app_user_id).ready = NTC.RST_READY_TRUE;
+							TcpApp.SendReady(NTC.RST_READY_TRUE);
+						}
 					}
 				}
 
@@ -260,178 +231,38 @@ public partial class TcpApp
 					if(TcpApp.app_user_id == destId)
 					{
 						string name = TcpApp.FindUser(sendId).name;
-						string log = "OnIoEvent:NTC.GP_RS_INVITE::" + name + "::"+rq;
+						string log = "OnRecv:NTC.GP_RS_INVITE::" + name + "::"+rq;
 						PGLog.LOGI(log);
 
 						// Send Ready
 						if(rq == NTC.RST_OK)
 						{
 							app_advr_id = sendId;
-							TcpApp.FindUser(app_advr_id).ready = NTC.RST_READY_TRUE;
 
-							FormMsgBox frmMsg = new FormMsgBox("Inviting success","Msg", (int)MessageBoxButtons.OK, null, invited_rqs);
-							Program.ShowMsgBox(frmMsg);
+							MessageBox.Show("Inviting success","Msg",MessageBoxButtons.OK);
+							TcpApp.SendReady(NTC.RST_READY_TRUE);
 							return;
 						}
 
-						FormMsgBox frmMsg2 = new FormMsgBox("Inviting failed","Msg", (int)MessageBoxButtons.OK, null, null);
-						Program.ShowMsgBox(frmMsg2);
+
+						MessageBox.Show("Inviting failed","Msg",MessageBoxButtons.OK);
 					}
 				}
 
-				else if(NTC.GP_PLAY_SHOT == gpp)
+				else if(NTC.GP_SHOT     == gpp)
 				{
-					idx_bgn= NTC.PCK_HEAD + 2;
-					Packet.ValueFromBuf(ref sendId, rcv, idx_bgn + 0 * 4);
-					Packet.ValueFromBuf(ref destId, rcv, idx_bgn + 1 * 4);
-
-					// dest id is me...
-					if( TcpApp.app_advr_id == sendId &&
-						TcpApp.app_user_id == destId)
-					{
-						TplayInfo other_play = TcpApp.UserOther().play;
-						string    name       = TcpApp.FindUser(sendId).name;
-
-						float shot_x=0.0F, shot_y=0.0F, shot_z=0.0F;
-						float shot_d=0.0F;
-						float shot_ct_x=0.0F, shot_ct_y=0.0F;
-						uint  shot_club=0;
-						float shot_pow=0.0F, shot_best=0.0F;
-						byte  shot_stroke = 0;
-
-						Packet.ValueFromBuf(ref shot_x   , rcv, idx_bgn + 2 * 4);
-						Packet.ValueFromBuf(ref shot_y   , rcv, idx_bgn + 3 * 4);
-						Packet.ValueFromBuf(ref shot_z   , rcv, idx_bgn + 4 * 4);
-						Packet.ValueFromBuf(ref shot_d   , rcv, idx_bgn + 5 * 4);
-						Packet.ValueFromBuf(ref shot_ct_x, rcv, idx_bgn + 6 * 4);
-						Packet.ValueFromBuf(ref shot_ct_y, rcv, idx_bgn + 7 * 4);
-						Packet.ValueFromBuf(ref shot_club, rcv, idx_bgn + 8 * 4);
-						Packet.ValueFromBuf(ref shot_pow , rcv, idx_bgn + 9 * 4);
-						Packet.ValueFromBuf(ref shot_best, rcv, idx_bgn +10 * 4);
-						Packet.ValueFromBuf(ref shot_stroke, rcv, idx_bgn +11 * 4);
-
-						other_play.x     = shot_x   ;
-						other_play.y     = shot_y   ;
-						other_play.z     = shot_z   ;
-						other_play.d     = shot_d   ;
-						other_play.ct_x  = shot_ct_x;
-						other_play.ct_y  = shot_ct_y;
-						other_play.club  = shot_club;
-						other_play.pow   = shot_pow ;
-						other_play.best  = shot_best;
-						other_play.best  = shot_stroke;
-
-						Program.ChangePlayPlayerInfo(0);
-						PGLog.LOGI("OnIoEvent:NTC.NTC.GP_PLAY_SHOT::" + name);
-					}
 				}
-				else if(NTC.GP_PLAY_PUTT == gpp)
+				else if(NTC.GP_PUTT     == gpp)
 				{
-					idx_bgn= NTC.PCK_HEAD + 2;
-					Packet.ValueFromBuf(ref sendId, rcv, idx_bgn + 0 * 4);
-					Packet.ValueFromBuf(ref destId, rcv, idx_bgn + 1 * 4);
-
-					// dest id is me...
-					if( TcpApp.app_advr_id == sendId &&
-						TcpApp.app_user_id == destId)
-					{
-						TplayInfo other_play = TcpApp.UserOther().play;
-						string    name       = TcpApp.FindUser(sendId).name;
-
-						float putt_x=0.0F, putt_y=0.0F, putt_z=0.0F;
-						float putt_d=0.0F;
-						float putt_ct_y=0.0F;
-						uint  putt_club=0;
-						float putt_pow=0.0F;
-
-						Packet.ValueFromBuf(ref putt_x   , rcv, idx_bgn + 2 * 4);
-						Packet.ValueFromBuf(ref putt_y   , rcv, idx_bgn + 3 * 4);
-						Packet.ValueFromBuf(ref putt_z   , rcv, idx_bgn + 4 * 4);
-						Packet.ValueFromBuf(ref putt_d   , rcv, idx_bgn + 5 * 4);
-						Packet.ValueFromBuf(ref putt_ct_y, rcv, idx_bgn + 6 * 4);
-						Packet.ValueFromBuf(ref putt_club, rcv, idx_bgn + 7 * 4);
-						Packet.ValueFromBuf(ref putt_pow , rcv, idx_bgn + 8 * 4);
-
-						other_play.x     = putt_x   ;
-						other_play.y     = putt_y   ;
-						other_play.z     = putt_z   ;
-						other_play.d     = putt_d   ;
-						other_play.ct_y  = putt_ct_y;
-						other_play.club  = putt_club;
-						other_play.pow   = putt_pow ;
-
-						Program.ChangePlayPlayerInfo(0);
-						PGLog.LOGI("OnIoEvent:NTC.NTC.GP_PLAY_PUTT::" + name);
-					}
 				}
-				else if(NTC.GP_PLAY_BPOS == gpp)
+				else if(NTC.GP_MOVESTOP == gpp)
 				{
-					idx_bgn= NTC.PCK_HEAD + 2;
-					Packet.ValueFromBuf(ref sendId, rcv, idx_bgn + 0 * 4);
-					Packet.ValueFromBuf(ref destId, rcv, idx_bgn + 1 * 4);
-
-					// dest id is me...
-					if( TcpApp.app_advr_id == sendId &&
-						TcpApp.app_user_id == destId)
-					{
-						TplayInfo other_play = TcpApp.UserOther().play;
-						string    name       = TcpApp.FindUser(sendId).name;
-
-						float bpos_x=0.0F, bpos_y=0.0F, bpos_z=0.0F;
-
-						Packet.ValueFromBuf(ref bpos_x   , rcv, idx_bgn + 2 * 4);
-						Packet.ValueFromBuf(ref bpos_y   , rcv, idx_bgn + 3 * 4);
-						Packet.ValueFromBuf(ref bpos_z   , rcv, idx_bgn + 4 * 4);
-
-						other_play.x     = bpos_x   ;
-						other_play.y     = bpos_y   ;
-						other_play.z     = bpos_z   ;
-
-						Program.ChangePlayPlayerInfo(0);
-						PGLog.LOGI("OnIoEvent:NTC.NTC.GP_PLAY_BPOS::" + name);
-					}
 				}
-				else if(NTC.GP_PLAY_END  == gpp)
+				else if(NTC.GP_END      == gpp)
 				{
-					idx_bgn= NTC.PCK_HEAD + 2;
-					Packet.ValueFromBuf(ref sendId, rcv, idx_bgn + 0 * 4);
-					Packet.ValueFromBuf(ref destId, rcv, idx_bgn + 1 * 4);
-
-					// dest id is me...
-					if( TcpApp.app_advr_id == sendId &&
-						TcpApp.app_user_id == destId)
-					{
-						TplayInfo other_play = TcpApp.UserOther().play;
-						string    name       = TcpApp.FindUser(sendId).name;
-
-						float end_x=0.0F, end_y=0.0F, end_z=0.0F;
-						byte  end_stroke=0;
-						uint  end_bonus =0;
-
-						Packet.ValueFromBuf(ref end_x     , rcv, idx_bgn + 2 * 4);
-						Packet.ValueFromBuf(ref end_y     , rcv, idx_bgn + 3 * 4);
-						Packet.ValueFromBuf(ref end_z     , rcv, idx_bgn + 4 * 4);
-						Packet.ValueFromBuf(ref end_stroke, rcv, idx_bgn + 5 * 4);
-						Packet.ValueFromBuf(ref end_bonus , rcv, idx_bgn + 6 * 4);
-
-						other_play.x     = end_x   ;
-						other_play.y     = end_y   ;
-						other_play.z     = end_z   ;
-						other_play.stroke= end_stroke;
-						other_play.bonus = end_bonus;
-
-						PGLog.LOGI("OnIoEvent:NTC.NTC.GP_PLAY_END::" + name);
-
-						if(APC.PHASE_PLAY == Program.CurrentPhage() )
-						{
-							Program.ChangePlayPlayerInfo(0);
-						}
-
-						else if(APC.PHASE_RST == Program.CurrentPhage() )
-						{
-							Program.ChangePlayPlayerInfo(0);
-						}
-					}
+				}
+				else if(NTC.GP_RESULT   == gpp)
+				{
 				}
 			}
 
@@ -450,17 +281,12 @@ public partial class TcpApp
 				usr = TcpApp.FindUser(id);
 				usr.ready = ready;
 
-				PGLog.LOGI("OnIoEvent:NTC.SC_BROADCAST_READY::" + usr.name + ", " + ready);
+				PGLog.LOGI("OnRecv:NTC.SC_BROADCAST_READY::" + usr.name + ", " + ready);
 
-				TuserInfo usrThis  = TcpApp.FindUser(app_user_id);
-				TuserInfo usrOther = TcpApp.FindUser(app_advr_id);
-
-				if( NTC.RST_READY_TRUE == usrThis .ready &&
-					NTC.RST_READY_TRUE == usrOther.ready)
+				
+				if( NTC.RST_READY_TRUE == TcpApp.FindUser(app_user_id).ready &&
+					NTC.RST_READY_TRUE == TcpApp.FindUser(app_advr_id).ready)
 				{
-					usrThis .isplay =  NTC.RST_OK;
-					usrOther.isplay =  NTC.RST_OK;
-
 					TcpApp.SendGo();
 					Program.ChageForm(APC.PHASE_PLAY);
 				}
@@ -473,7 +299,7 @@ public partial class TcpApp
 		}
 		else
 		{
-			PGLog.LOGI("OnIoEvent: Not defined");
+			PGLog.LOGI("OnRecv: Not defined");
 		}
 	}
 }
